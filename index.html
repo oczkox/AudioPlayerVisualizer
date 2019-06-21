@@ -1,0 +1,91 @@
+<!-- Music: https://www.bensound.com -->
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Audio Player</title>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        let analyser,
+        canvas,
+        ctx,
+        random = Math.random,
+        circles = [];
+
+        window.onload = function() {
+            canvas = document.createElement('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight /1.07;
+            document.body.appendChild(canvas);
+            ctx = canvas.getContext('2d');
+
+            setupWebAudio();
+
+            for (let i = 0; i < 200; i++) {
+                circles[i] = new Circle();
+                circles[i].draw();
+            }
+            draw();
+        };
+
+        function setupWebAudio() {
+            const audio = document.createElement('audio');
+            audio.src = 'bensound-buddy.mp3';
+            audio.controls = 'true';
+            audio.style.width = window.innerWidth + 'px';
+            document.body.appendChild(audio);
+
+            let audioContext = new AudioContext();
+            analyser = audioContext.createAnalyser();
+            const src = audioContext.createMediaElementSource(audio);
+            src.connect(analyser);
+            analyser.connect(audioContext.destination);
+            audio.play();
+        }
+
+        function draw() {
+            requestAnimationFrame(draw);
+            let freqByteData = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(freqByteData);
+            ctx.clearRect(0, 0, canvas.width, canvas.height,);
+
+            for (let i = 1; i < circles.length; i++) {
+                circles[i].radius = freqByteData[i] * 0.75;
+                circles[i].y = circles[i].y > canvas.height ? 0 : circles[i].y + 3;
+                circles[i].draw();
+            }
+        }
+
+        function RandomColor(){
+            return random() * 255 >> 0;
+        }
+
+        function Circle() {
+            this.x = random() * canvas.width;
+            this.y = random() * canvas.height;
+            this.radius = random() * 100 + 50;
+            this.color = 'rgb(' + RandomColor() + ',' + RandomColor() + ',' + RandomColor() + ')';
+        }
+
+        Circle.prototype.draw = function() {
+        const that = this;
+        ctx.save();
+        ctx.beginPath();
+        ctx.globalAlpha = random() / 9 + 0.6 ;
+        ctx.arc(that.x, that.y, that.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.restore();
+    }
+    </script>
+</body>
+</html>
